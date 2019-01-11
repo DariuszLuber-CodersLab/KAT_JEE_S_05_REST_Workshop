@@ -2,6 +2,8 @@ document.addEventListener("DOMContentLoaded",function(){
 
     getBooks();
     addBookAction();
+    addBookDetailsEvent();
+    addBookDeleteEvent();
 
 })
 
@@ -19,8 +21,16 @@ function getBooks(){
 
 function addBookToList(listEl ,bookObj){
     let newLi = document.createElement("li");
+    newLi.dataset.id = bookObj.id;
+
     let h2El = document.createElement("h2");
     h2El.innerText = bookObj.title;
+
+    let btnDelete = document.createElement("button");
+    btnDelete.innerText = "Usuń";
+    btnDelete.classList.add("delete");
+
+    h2El.appendChild(btnDelete);
 
     newLi.appendChild(h2El);
     listEl.appendChild(newLi)
@@ -62,5 +72,52 @@ function addBookAction(){
             alert("Nie udało się zapisać książki - spróbuj ponownie");
         })
 
+    })
+}
+
+function addBookDeleteEvent(){
+    let listEl = document.getElementById("bookList");
+    listEl.addEventListener("click", function (e) {
+        let caller = e.target;
+        if(caller.tagName === "BUTTON" && caller.className.indexOf("delete") != -1){
+            let bookId = caller.parentElement.parentElement.dataset.id;
+            $.ajax({
+                url: "http://localhost:8282/books/"+bookId,
+                type: "DELETE",
+                dataType: "json"
+            })
+            .done(function(){
+               let liToDelete = caller.parentElement.parentElement;
+               liToDelete.parentElement.removeChild(liToDelete);
+            })
+        }
+    })
+}
+
+
+function addBookDetailsEvent(){
+    let listEl = document.getElementById("bookList");
+    listEl.addEventListener("click", function (e) {
+        let caller = e.target;
+        if(caller.tagName === "H2"){
+            let bookId = caller.parentElement.dataset.id;
+            getBookDetails(bookId, function(book){
+                console.log("CREATE DIV FOR BOOK");
+                console.log(book);
+            })
+        }
+    })
+}
+
+
+function getBookDetails(id, callback){
+    $.ajax({
+        url: "http://localhost:8282/books/"+id,
+        dataType: "json"
+    })
+    .done(function(book){
+       if(typeof callback === "function"){
+           callback(book);
+       }
     })
 }
